@@ -1,4 +1,5 @@
 ﻿using Core.Entities;
+using Core.Interfaces;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,26 +16,28 @@ namespace API.Controllers
     [ApiController]
     public class ProductsController : ControllerBase
     {
-        private readonly StoreContext _context;
+        private readonly IProductRepository _productRepository;
 
-        public ProductsController(StoreContext context)
+        public ProductsController(IProductRepository productRepository)
         {
-            this._context = context;
+            this._productRepository = productRepository;
         }
 
         // GET: api/<ProductsController>
         [HttpGet]
-        public async Task<ActionResult<List<Product>>> Get()
-        {
-            List<Product> products = await this._context.Products.ToListAsync();
+        public async  Task<ActionResult<List<Product>>> Get()
+        { 
+            IReadOnlyList<Product> products = await  this._productRepository.GetProductsAsync();           
             return Ok(products);
         }
+
+        
 
         // GET api/<ProductsController>/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Product>> Get(int id)
         {
-            Product product = await this._context.Products.FindAsync(id);
+            Product product = await this._productRepository.GetProductByIdAsync(id);
             return product;
         }
 
@@ -54,6 +57,24 @@ namespace API.Controllers
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
+        }
+
+
+        // GET: api/Products/ProductBrands
+       
+        [HttpGet("brands")]
+        public async Task<ActionResult<List<ProductBrand>>> GetBrands()
+        {
+            IReadOnlyList<ProductBrand> productBrands = await this._productRepository.GetProductBrandsAsync();
+            return Ok(productBrands);
+        }
+        // GET: api/Products/ProductTypes
+
+        [HttpGet("types")]
+        public async Task<ActionResult<List<ProductBrand>>> GetTypes()
+        {
+            IReadOnlyList<ProductType> productTypes = await this._productRepository.GetProductTypesAsync();
+            return Ok(productTypes);
         }
     }
 }
