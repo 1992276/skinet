@@ -1,9 +1,11 @@
 ﻿using API.Dtos;
+using API.Errors;
 using AutoMapper;
 using Core.Entities;
 using Core.Interfaces;
 using Core.Specifications;
 using Infrastructure.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -14,10 +16,8 @@ using System.Threading.Tasks;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace API.Controllers
-{
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ProductsController : ControllerBase
+{    
+    public class ProductsController : BaseApiController
     {
         private readonly IGenericRepository<Product> _productRepo;
         private readonly IGenericRepository<ProductBrand> _productBrandRepo;
@@ -48,11 +48,17 @@ namespace API.Controllers
 
         // GET api/<ProductsController>/5
         [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ProductToReturnDto>> Get(int id)
         {
            
             ISpecification<Product> spec = new ProductWithTypesAndBrandSpecification(p=>p.Id == id);
             Product product = await this._productRepo.GetEntityWithSpec(spec);
+            if (product is null)
+            {
+                return NotFound(new ApiResponse(404));
+            }
            
             return this._mapper.Map<Product,ProductToReturnDto>(product);
 
